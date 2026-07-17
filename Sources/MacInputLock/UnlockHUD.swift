@@ -46,12 +46,13 @@ final class UnlockHUDController {
             try? await Task.sleep(for: .seconds(1.8))
             guard !Task.isCancelled, let panel else { return }
 
-            await NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.45
-                context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-                panel.animator().alphaValue = 0
-            }
+            NSAnimationContext.beginGrouping()
+            NSAnimationContext.current.duration = 0.45
+            NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            panel.animator().alphaValue = 0
+            NSAnimationContext.endGrouping()
 
+            try? await Task.sleep(for: .milliseconds(500))
             guard !Task.isCancelled else { return }
             panel.close()
             if self?.panel === panel {
