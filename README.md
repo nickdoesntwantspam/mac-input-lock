@@ -8,6 +8,10 @@ Temporarily disable every keyboard, mouse, and trackpad connected to your Mac wi
 
 Mac Input Lock is a focused, open-source menu-bar utility for toddlers, pets, keyboard cleaning, presentations, and any situation where accidental input needs to stop. It has no accounts, analytics, network access, background service, or telemetry.
 
+<p align="center">
+  <img src="Documentation/Screenshots/menu.png" width="420" alt="Mac Input Lock menu showing the unlock sequence and Start button">
+</p>
+
 ## Requirements
 
 - macOS 14 Sonoma or later
@@ -17,7 +21,7 @@ Mac Input Lock is a focused, open-source menu-bar utility for toddlers, pets, ke
 
 Download the notarized DMG from [GitHub Releases](https://github.com/nickdoesntwantspam/mac-input-lock/releases), open it, and drag **Mac Input Lock** to Applications.
 
-After the first Homebrew release, it will also be available with:
+Or install it with Homebrew:
 
 ```sh
 brew install --cask nickdoesntwantspam/tap/mac-input-lock
