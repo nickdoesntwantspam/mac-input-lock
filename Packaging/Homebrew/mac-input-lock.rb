@@ -7,7 +7,7 @@ cask "mac-input-lock" do
   desc "Temporarily disable keyboard, mouse, and trackpad input"
   homepage "https://github.com/nickdoesntwantspam/mac-input-lock"
 
-  depends_on macos: ">= :sonoma"
+  depends_on macos: :sonoma
 
   app "Mac Input Lock.app"
 
