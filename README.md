@@ -6,7 +6,7 @@
 
 Temporarily disable every keyboard, mouse, and trackpad connected to your Mac without interrupting video calls, playback, audio, camera, microphone, or anything already running.
 
-Mac Input Lock is a focused, open-source menu-bar utility for toddlers, pets, keyboard cleaning, presentations, and any situation where accidental input needs to stop. It has no accounts, analytics, network access, background service, or telemetry.
+Mac Input Lock is a focused, open-source menu-bar utility for toddlers, pets, keyboard cleaning, uninterrupted playback, and any situation where accidental input needs to stop. It has no accounts, analytics, network access, background service, or telemetry.
 
 <p align="center">
   <img src="Documentation/Screenshots/menu.png" width="420" alt="Mac Input Lock menu showing the unlock sequence and Start button">
@@ -33,15 +33,15 @@ On first use, enable **Mac Input Lock** in **System Settings → Privacy & Secur
 
 1. Open the lock icon in the menu bar.
 2. Choose a case-sensitive unlock sequence containing at least one visible character. This is a convenience mechanism, not a password.
-3. Press **Start**. A five-second countdown gives you time to cancel or remember the sequence.
+3. Press **Start**. A five-second countdown gives you time to cancel or remember the unlock sequence.
 4. The app confirms that input is locked, remains visible briefly, and fades away. The menu bar says **Input Locked**.
-5. Type the exact sequence to unlock. A large animated lock opens in the center of the screen and fades away.
+5. Type the exact unlock sequence. Every keyboard, mouse, and trackpad immediately becomes responsive again.
 
-The sequence is stored only in local macOS preferences.
+The unlock sequence is stored only in local macOS preferences.
 
 ## Privacy and permissions
 
-Accessibility permission is required because ordinary macOS applications cannot consume system-wide keyboard and pointer events. Mac Input Lock processes events locally, retains only enough recent characters to recognize the configured sequence, and never records or transmits input.
+Accessibility permission is required because ordinary macOS applications cannot consume system-wide keyboard and pointer events. Mac Input Lock processes events locally, retains only enough recent characters to recognize the configured unlock sequence, and never records or transmits input.
 
 The complete permission-sensitive implementation is in [`InputBlocker.swift`](Sources/MacInputLock/InputBlocker.swift). The app requests no camera, microphone, Screen Recording, file, notification, or network permission.
 
@@ -50,8 +50,8 @@ The complete permission-sensitive implementation is in [`InputBlocker.swift`](So
 - Test the unlock sequence before handing the Mac to a child.
 - Built-in and external keyboards, mice, trackpads, scrolling, dragging, and media-key events are blocked through the macOS session event stream.
 - Hardware controls outside that event stream, including the physical power button, remain controlled by macOS.
-- The normal Force Quit window is not a practical recovery method because local input is blocked.
-- If the configured sequence does not work, hold the physical power/Touch ID button until the Mac turns off, then restart it. This can discard unsaved work. Mac Input Lock does not automatically launch or relock after restart.
+- The normal Force Quit window is not useful while locked because local input is blocked.
+- If the configured unlock sequence does not work, hold the physical power/Touch ID button until the Mac turns off, then restart it. This can discard unsaved work. Mac Input Lock does not automatically launch or relock after restart.
 
 ## Build from source
 
