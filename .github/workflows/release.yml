@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   release:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
         with:
@@ -40,7 +40,7 @@ jobs:
 
       - name: Build, sign, notarize, and validate
         env:
-          SIGNING_IDENTITY: Developer ID Application: Nicholas Williams (${{ secrets.APPLE_TEAM_ID }})
+          SIGNING_IDENTITY: "Developer ID Application: Nicholas Williams (${{ secrets.APPLE_TEAM_ID }})"
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
         run: ./Scripts/release.sh
