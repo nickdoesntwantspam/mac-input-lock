@@ -11,10 +11,10 @@ cask "mac-input-lock" do
 
   app "Mac Input Lock.app"
 
+  zap trash: "~/Library/Preferences/com.nicholaswilliams.MacInputLock.plist"
+
   caveats <<~EOS
     Mac Input Lock requires Accessibility permission to suppress input.
     Enable it in System Settings → Privacy & Security → Accessibility.
   EOS
-
-  zap trash: "~/Library/Preferences/com.nicholaswilliams.MacInputLock.plist"
 end
