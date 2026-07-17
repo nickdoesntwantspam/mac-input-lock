@@ -1,6 +1,6 @@
 cask "mac-input-lock" do
   version "1.0.0"
-  sha256 "bd63d38731fc37d543baf1669435753d537bf05fb6eef4b35552e149a82604e5"
+  sha256 "386082f6bbcb5998123da98b19a46719a29b177c6b3c7f14e4549d87badf99cc"
 
   url "https://github.com/nickdoesntwantspam/mac-input-lock/releases/download/v#{version}/Mac-Input-Lock-#{version}.dmg"
   name "Mac Input Lock"
