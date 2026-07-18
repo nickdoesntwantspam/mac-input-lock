@@ -37,5 +37,6 @@ To release:
 
 1. Confirm CI passes on `main`.
 2. Tag the release commit, for example `git tag v1.0.0`.
-3. Push the tag. GitHub Actions builds and publishes the release only after notarization and validation succeed.
-4. Update the Homebrew Cask with the published DMG checksum.
+3. Push the tag. GitHub Actions builds and validates the notarized DMG, retains it as a short-lived maintainer artifact, and publishes a source-only GitHub Release.
+4. Download the validated artifact and publish the DMG and checksum through the private website repository.
+5. Update the website's version, file size, checksum, and download copy, then verify the Stripe purchase and fulfillment flow before announcing the release.

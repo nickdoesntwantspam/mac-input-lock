@@ -45,14 +45,21 @@ jobs:
           APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
         run: ./Scripts/release.sh
 
+      - name: Retain official build for website fulfillment
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-input-lock-${{ github.ref_name }}-official-build
+          path: |
+            dist/Mac-Input-Lock-*.dmg
+            dist/Mac-Input-Lock-*.dmg.sha256
+          if-no-files-found: error
+          retention-days: 1
+
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
           gh release create "$GITHUB_REF_NAME" \
-            "dist/Mac-Input-Lock-$VERSION.dmg" \
-            "dist/Mac-Input-Lock-$VERSION.dmg.sha256" \
             --verify-tag \
             --generate-notes \
-            --title "Mac Input Lock $VERSION"
+            --title "Mac Input Lock ${GITHUB_REF_NAME#v}"

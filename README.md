@@ -19,13 +19,15 @@ Mac Input Lock is a focused, open-source menu-bar utility for toddlers, pets, ke
 
 ## Install
 
-Download the notarized DMG from [GitHub Releases](https://github.com/nickdoesntwantspam/mac-input-lock/releases), open it, and drag **Mac Input Lock** to Applications.
+### Official ready-to-install build
 
-Or install it with Homebrew:
+Purchase the official signed and notarized build for a one-time $9 payment at [macinputlock.com](https://macinputlock.com/#get-the-app). Open the DMG and drag **Mac Input Lock** to Applications.
 
-```sh
-brew install --cask nickdoesntwantspam/tap/mac-input-lock
-```
+The purchase supports Apple signing, notarization, compatibility testing, and continued maintenance. It includes household use and future updates to the official build, with no account, activation, or subscription.
+
+### Build it yourself for free
+
+Mac Input Lock remains completely open source under the MIT license. Developers can build the same app from source using the instructions below; no purchase is required.
 
 On first use, enable **Mac Input Lock** in **System Settings → Privacy & Security → Accessibility**, then press Start again.
 
@@ -69,9 +71,9 @@ Set `UNIVERSAL=1` to build both Apple Silicon and Intel slices. Release versions
 
 ## Release process
 
-Tagged releases are built, tested, signed with Hardened Runtime, notarized, stapled, packaged as a DMG, and published by GitHub Actions. Maintainers must configure the signing and notarization secrets documented in [CONTRIBUTING.md](CONTRIBUTING.md).
+Tagged releases are built, tested, signed with Hardened Runtime, notarized, stapled, and packaged as a DMG by GitHub Actions. Maintainers must configure the signing and notarization secrets documented in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-The authoritative release artifact is always the notarized DMG attached to a GitHub Release. Mac Input Lock does not include an automatic updater; Homebrew users update with `brew upgrade`, and direct-download users install a newer release manually.
+GitHub Releases contain the corresponding source release. The official ready-to-install DMG is distributed through [macinputlock.com](https://macinputlock.com/#get-the-app); the build workflow retains a short-lived copy for the maintainer to publish there. Mac Input Lock does not include an automatic updater, so official-build users install newer releases manually.
 
 ## Contributing
 
