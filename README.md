@@ -76,7 +76,7 @@ Set `UNIVERSAL=1` to build both Apple Silicon and Intel slices. Release versions
 
 Tagged releases are built, tested, signed with Hardened Runtime, notarized, stapled, and packaged as a DMG by GitHub Actions. Maintainers must configure the signing and notarization secrets documented in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-GitHub Releases contain the corresponding source release. The official ready-to-install DMG is distributed through [macinputlock.com](https://macinputlock.com/#get-the-app); the build workflow retains a short-lived copy for the maintainer to publish there. Mac Input Lock does not include an automatic updater, so official-build users install newer releases manually.
+GitHub Releases are deliberately source-only and must never contain a prebuilt app or DMG. The official ready-to-install DMG is distributed exclusively through [macinputlock.com](https://macinputlock.com/#get-the-app); the build workflow retains a short-lived private copy for the maintainer to publish there. Every feature release must update and verify that protected fulfillment artifact before the feature is announced. Mac Input Lock does not include an automatic updater, so official-build users install newer releases manually.
 
 ## Contributing
 

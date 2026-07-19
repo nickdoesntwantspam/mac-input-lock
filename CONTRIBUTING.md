@@ -18,6 +18,20 @@ Test input suppression on real hardware before submitting behavioral changes. A 
 - Do not add analytics, accounts, telemetry, network calls, background services, Sparkle, or new permissions without an explicit project decision.
 - Never commit certificates, `.p12` archives, App Store Connect keys, or passwords.
 
+## Non-negotiable distribution rule
+
+The public repository and every public GitHub Release must remain source-only. Never attach or commit a built `.app`, `.dmg`, `.pkg`, binary archive, or binary checksum. GitHub's automatically generated source archives are expected.
+
+A user-visible feature is not released until all of the following are true:
+
+1. The feature and its tests are merged and tagged.
+2. The release workflow produces and validates the signed, notarized DMG as a short-lived private Actions artifact.
+3. That exact DMG is encrypted and installed in the private website repository, the protected download version is updated, and the matching Sites decryption secret is deployed.
+4. The Stripe-gated purchase and download flow is verified before public documentation describes the feature as available.
+5. The corresponding GitHub Release is checked and has zero binary assets.
+
+This rule applies to every feature release, including small fixes. The paid product is convenience: source remains freely available, while the maintained ready-to-install build is delivered only after payment.
+
 ## Maintainer release setup
 
 The release workflow requires a Developer ID Application certificate for Apple team `G5E7K59HUM` and an App Store Connect API key with notarization access.
@@ -37,6 +51,6 @@ To release:
 
 1. Confirm CI passes on `main`.
 2. Tag the release commit, for example `git tag v1.0.0`.
-3. Push the tag. GitHub Actions builds and validates the notarized DMG, retains it as a short-lived maintainer artifact, and publishes a source-only GitHub Release.
+3. Push the tag. GitHub Actions builds and validates the notarized DMG, retains it as a short-lived private maintainer artifact, and publishes a source-only GitHub Release with no binary assets.
 4. Download the validated artifact and publish the DMG and checksum through the private website repository.
 5. Update the website's version, file size, checksum, and download copy, then verify the Stripe purchase and fulfillment flow before announcing the release.

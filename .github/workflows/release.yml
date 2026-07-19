@@ -59,9 +59,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # Public GitHub releases must remain source-only. The signed DMG is
+          # distributed exclusively through the Stripe-gated website flow.
           gh release create "$GITHUB_REF_NAME" \
             --verify-tag \
             --generate-notes \
-            --title "Mac Input Lock ${GITHUB_REF_NAME#v}" \
-            dist/Mac-Input-Lock-*.dmg \
-            dist/Mac-Input-Lock-*.dmg.sha256
+            --title "Mac Input Lock ${GITHUB_REF_NAME#v}"
