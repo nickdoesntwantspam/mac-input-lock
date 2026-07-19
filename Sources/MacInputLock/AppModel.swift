@@ -19,15 +19,24 @@ final class AppModel {
 
     private let blocker: InputBlocker
     private let defaults: UserDefaults
+    private let hotKey: GlobalHotKey
     private var transitionTask: Task<Void, Never>?
 
     var state: State = .idle
     var sequenceText: String
 
-    init(blocker: InputBlocker = InputBlocker(), defaults: UserDefaults = .standard) {
+    init(
+        blocker: InputBlocker = InputBlocker(),
+        defaults: UserDefaults = .standard,
+        hotKey: GlobalHotKey = GlobalHotKey()
+    ) {
         self.blocker = blocker
         self.defaults = defaults
+        self.hotKey = hotKey
         sequenceText = defaults.string(forKey: DefaultsKey.unlockSequence) ?? UnlockSequence.defaultValue
+        hotKey.onPress = { [weak self] in
+            self?.toggleInstantLock()
+        }
     }
 
     var validationMessage: String? {
@@ -47,13 +56,7 @@ final class AppModel {
     func start() {
         transitionTask?.cancel()
         do {
-            let sequence = try UnlockSequence(sequenceText)
-            guard AccessibilityPermission.isGranted else {
-                AccessibilityPermission.request()
-                state = .error("Accessibility access is required. Enable Mac Input Lock in System Settings → Privacy & Security → Accessibility, then press Start again.")
-                return
-            }
-            saveSequence()
+            let sequence = try preparedSequence()
             state = .arming(secondsRemaining: 5)
             transitionTask = Task { [weak self] in
                 for remaining in stride(from: 4, through: 1, by: -1) {
@@ -83,11 +86,37 @@ final class AppModel {
         state = .idle
     }
 
+    func toggleInstantLock() {
+        switch state {
+        case .locked:
+            unlock()
+        case .idle, .arming, .restored, .error:
+            transitionTask?.cancel()
+            transitionTask = nil
+            do {
+                activate(sequence: try preparedSequence())
+            } catch {
+                state = .error(error.localizedDescription)
+            }
+        }
+    }
+
+    private func preparedSequence() throws -> UnlockSequence {
+        let sequence = try UnlockSequence(sequenceText)
+        guard AccessibilityPermission.isGranted else {
+            AccessibilityPermission.request()
+            throw ShortcutError.accessibilityRequired
+        }
+        saveSequence()
+        return sequence
+    }
+
     private func activate(sequence: UnlockSequence) {
         do {
             try blocker.start(sequence: sequence) { [weak self] in
                 Task { @MainActor in self?.unlock() }
             }
+            hotKey.stop()
             state = .locked
         } catch {
             state = .error(error.localizedDescription)
@@ -96,12 +125,21 @@ final class AppModel {
 
     private func unlock() {
         blocker.stop()
+        hotKey.start()
         state = .restored
         UnlockHUDController.shared.show()
         transitionTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(3))
             guard !Task.isCancelled else { return }
             self?.state = .idle
+        }
+    }
+
+    private enum ShortcutError: LocalizedError {
+        case accessibilityRequired
+
+        var errorDescription: String? {
+            "Accessibility access is required. Enable Mac Input Lock in System Settings → Privacy & Security → Accessibility, then try again."
         }
     }
 }

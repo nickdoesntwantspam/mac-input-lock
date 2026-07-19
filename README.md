@@ -39,6 +39,8 @@ On first use, enable **Mac Input Lock** in **System Settings → Privacy & Secur
 4. The app confirms that input is locked, remains visible briefly, and fades away. The menu bar says **Input Locked**.
 5. Type the exact unlock sequence. Every keyboard, mouse, and trackpad immediately becomes responsive again.
 
+For faster control, press **Control–Option–Command–D** (`⌃⌥⌘D`) anywhere to lock immediately without the countdown. The keys can all be pressed with the left hand. Press the same shortcut again while locked to restore input immediately. The shortcut is fixed so it remains predictable; the configured unlock sequence continues to work as an alternative.
+
 The unlock sequence is stored only in local macOS preferences.
 
 ## Privacy and permissions
@@ -50,6 +52,7 @@ The complete permission-sensitive implementation is in [`InputBlocker.swift`](So
 ## Safety and limitations
 
 - Test the unlock sequence before handing the Mac to a child.
+- Test `⌃⌥⌘D` as well if you plan to use the instant shortcut. The Start button remains the safer handoff method because it includes a five-second countdown.
 - Built-in and external keyboards, mice, trackpads, scrolling, dragging, and media-key events are blocked through the macOS session event stream.
 - Hardware controls outside that event stream, including the physical power button, remain controlled by macOS.
 - The normal Force Quit window is not useful while locked because local input is blocked.

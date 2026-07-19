@@ -60,4 +60,19 @@ final class UnlockSequenceTests: XCTestCase {
         XCTAssertFalse(firstMatcher.consume("opne"))
         XCTAssertFalse(secondMatcher.consume("nope"))
     }
+
+    func testInstantLockShortcutRequiresExactKeyAndModifiers() {
+        let required: CGEventFlags = [.maskControl, .maskAlternate, .maskCommand]
+
+        XCTAssertTrue(InstantLockShortcut.matches(keyCode: InstantLockShortcut.keyCode, flags: required))
+        XCTAssertFalse(InstantLockShortcut.matches(keyCode: 0, flags: required))
+        XCTAssertFalse(InstantLockShortcut.matches(keyCode: InstantLockShortcut.keyCode, flags: [.maskCommand]))
+        XCTAssertFalse(InstantLockShortcut.matches(keyCode: InstantLockShortcut.keyCode, flags: required.union(.maskShift)))
+    }
+
+    func testInstantLockShortcutIgnoresUnrelatedEventFlags() {
+        let flags: CGEventFlags = [.maskControl, .maskAlternate, .maskCommand, .maskAlphaShift]
+
+        XCTAssertTrue(InstantLockShortcut.matches(keyCode: InstantLockShortcut.keyCode, flags: flags))
+    }
 }

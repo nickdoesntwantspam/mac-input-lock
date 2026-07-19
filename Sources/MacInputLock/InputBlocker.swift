@@ -80,6 +80,17 @@ final class InputBlocker: @unchecked Sendable {
         }
 
         if type == .keyDown {
+            if InstantLockShortcut.matches(
+                keyCode: CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode)),
+                flags: event.flags
+            ) {
+                let callback = lock.withLock { onUnlock }
+                if let callback {
+                    DispatchQueue.main.async(execute: callback)
+                }
+                return nil
+            }
+
             var length = 0
             var buffer = [UniChar](repeating: 0, count: 16)
             event.keyboardGetUnicodeString(maxStringLength: buffer.count, actualStringLength: &length, unicodeString: &buffer)

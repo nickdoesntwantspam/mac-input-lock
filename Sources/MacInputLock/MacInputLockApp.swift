@@ -73,7 +73,7 @@ private struct LockMenu: View {
                 .frame(maxWidth: .infinity)
 
             case .locked:
-                Text("Type “\(model.sequenceText)” to unlock. Every keyboard, mouse, and trackpad action is blocked until then.")
+                Text("Type “\(model.sequenceText)” or press \(InstantLockShortcut.symbol) to unlock. Every other keyboard, mouse, and trackpad action is blocked until then.")
                     .font(.callout)
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -100,6 +100,10 @@ private struct LockMenu: View {
                 .tint(model.validationMessage == nil ? .accentColor : .gray)
                 .opacity(model.validationMessage == nil ? 1 : 0.48)
                 .frame(maxWidth: .infinity, alignment: .trailing)
+
+                Text("\(InstantLockShortcut.symbol) locks instantly · Press it again to unlock")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
 
                 if let reason = model.validationMessage {
                     Label(reason, systemImage: "exclamationmark.circle.fill")
