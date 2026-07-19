@@ -62,4 +62,6 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             --verify-tag \
             --generate-notes \
-            --title "Mac Input Lock ${GITHUB_REF_NAME#v}"
+            --title "Mac Input Lock ${GITHUB_REF_NAME#v}" \
+            dist/Mac-Input-Lock-*.dmg \
+            dist/Mac-Input-Lock-*.dmg.sha256
