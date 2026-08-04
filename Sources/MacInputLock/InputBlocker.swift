@@ -11,9 +11,11 @@ final class InputBlocker: @unchecked Sendable {
     }
 
     private let lock = NSLock()
+    private let eventQueue = DispatchQueue(label: "com.nicholaswilliams.MacInputLock.event-tap")
     private var matcher: SequenceMatcher?
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
+    private var eventRunLoop: CFRunLoop?
     private var onUnlock: (@Sendable () -> Void)?
 
     var isRunning: Bool {
@@ -28,6 +30,46 @@ final class InputBlocker: @unchecked Sendable {
             self.onUnlock = onUnlock
         }
 
+        let ready = DispatchSemaphore(value: 0)
+        eventQueue.async { [weak self] in
+            guard let self else {
+                ready.signal()
+                return
+            }
+            self.installEventTap(ready: ready)
+        }
+        ready.wait()
+
+        guard isRunning else {
+            lock.withLock {
+                matcher = nil
+                self.onUnlock = nil
+            }
+            throw BlockerError.eventTapUnavailable
+        }
+    }
+
+    func stop() {
+        let resources = lock.withLock { () -> (CFMachPort?, CFRunLoopSource?, CFRunLoop?) in
+            let result = (eventTap, runLoopSource, eventRunLoop)
+            eventTap = nil
+            runLoopSource = nil
+            eventRunLoop = nil
+            matcher = nil
+            onUnlock = nil
+            return result
+        }
+
+        if let tap = resources.0 {
+            CGEvent.tapEnable(tap: tap, enable: false)
+        }
+        if let source = resources.1, let runLoop = resources.2 {
+            CFRunLoopRemoveSource(runLoop, source, .commonModes)
+            CFRunLoopStop(runLoop)
+        }
+    }
+
+    private func installEventTap(ready: DispatchSemaphore) {
         let context = Unmanaged.passUnretained(self).toOpaque()
         guard let tap = CGEvent.tapCreate(
             tap: .cgSessionEventTap,
@@ -37,38 +79,21 @@ final class InputBlocker: @unchecked Sendable {
             callback: inputBlockerCallback,
             userInfo: context
         ) else {
-            lock.withLock {
-                matcher = nil
-                self.onUnlock = nil
-            }
-            throw BlockerError.eventTapUnavailable
+            ready.signal()
+            return
         }
 
         let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
+        let runLoop = CFRunLoopGetCurrent()
         lock.withLock {
             eventTap = tap
             runLoopSource = source
+            eventRunLoop = runLoop
         }
-        CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
+        CFRunLoopAddSource(runLoop, source, .commonModes)
         CGEvent.tapEnable(tap: tap, enable: true)
-    }
-
-    func stop() {
-        let resources = lock.withLock { () -> (CFMachPort?, CFRunLoopSource?) in
-            let result = (eventTap, runLoopSource)
-            eventTap = nil
-            runLoopSource = nil
-            matcher = nil
-            onUnlock = nil
-            return result
-        }
-
-        if let tap = resources.0 {
-            CGEvent.tapEnable(tap: tap, enable: false)
-        }
-        if let source = resources.1 {
-            CFRunLoopRemoveSource(CFRunLoopGetMain(), source, .commonModes)
-        }
+        ready.signal()
+        CFRunLoopRun()
     }
 
     fileprivate func handle(type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
