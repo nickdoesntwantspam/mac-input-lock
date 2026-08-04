@@ -2,38 +2,95 @@ import SwiftUI
 
 @main
 struct MacInputLockApp: App {
-    @State private var model = AppModel()
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
-        MenuBarExtra {
-            LockMenu(model: model)
-        } label: {
-            MenuBarLabel(state: model.state)
+        Settings {
+            EmptyView()
         }
-        .menuBarExtraStyle(.window)
     }
 }
 
-private struct MenuBarLabel: View {
-    let state: AppModel.State
+@MainActor
+private final class AppDelegate: NSObject, NSApplicationDelegate {
+    private var statusBarController: StatusBarController?
 
-    var body: some View {
-        switch state {
-        case .locked:
-            Label("Input Locked", systemImage: "lock.fill")
-        case let .arming(seconds):
-            Label("Locking in \(seconds)…", systemImage: "timer")
-        case .restored:
-            Label("Input Restored", systemImage: "checkmark.circle.fill")
-        case .idle, .error:
-            Image(systemName: "lock.open")
-                .accessibilityLabel("Mac Input Lock")
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        statusBarController = StatusBarController()
+    }
+}
+
+@MainActor
+private final class StatusBarController: NSObject {
+    private let model = AppModel()
+    private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+    private let popover = NSPopover()
+
+    override init() {
+        super.init()
+
+        popover.behavior = .transient
+        popover.animates = true
+        popover.contentViewController = NSHostingController(
+            rootView: LockMenu(model: model) { [weak popover] in
+                popover?.performClose(nil)
+            }
+        )
+
+        if let button = statusItem.button {
+            button.target = self
+            button.action = #selector(togglePopover)
+            button.sendAction(on: [.leftMouseUp])
         }
+        observeState()
+    }
+
+    @objc private func togglePopover() {
+        guard let button = statusItem.button else { return }
+        if popover.isShown {
+            popover.performClose(nil)
+        } else {
+            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            popover.contentViewController?.view.window?.makeKey()
+        }
+    }
+
+    private func observeState() {
+        withObservationTracking {
+            updateStatusItem(for: model.state)
+        } onChange: { [weak self] in
+            Task { @MainActor in
+                self?.observeState()
+            }
+        }
+    }
+
+    private func updateStatusItem(for state: AppModel.State) {
+        guard let button = statusItem.button else { return }
+        let symbol: String
+        let label: String
+        switch state {
+        case .idle, .error:
+            symbol = "lock.open"
+            label = "Mac Input Lock"
+        case .arming:
+            symbol = "timer"
+            label = "Mac Input Lock: locking soon"
+        case .locked:
+            symbol = "lock.fill"
+            label = "Mac Input Lock: input locked"
+        case .restored:
+            symbol = "checkmark.circle.fill"
+            label = "Mac Input Lock: input restored"
+        }
+        button.image = NSImage(systemSymbolName: symbol, accessibilityDescription: label)
+        button.toolTip = label
     }
 }
 
 private struct LockMenu: View {
     @Bindable var model: AppModel
+    let dismiss: () -> Void
     @FocusState private var sequenceFocused: Bool
     @State private var lockedPresentationOpacity = 1.0
     @State private var lockedWindowTask: Task<Void, Never>?
@@ -215,7 +272,7 @@ private struct LockMenu: View {
 
             try? await Task.sleep(for: .milliseconds(450))
             guard !Task.isCancelled, model.state == .locked else { return }
-            NSApplication.shared.keyWindow?.orderOut(nil)
+            dismiss()
             lockedPresentationOpacity = 1
         }
     }
