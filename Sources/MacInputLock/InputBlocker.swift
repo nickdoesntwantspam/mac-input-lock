@@ -51,22 +51,29 @@ final class InputBlocker: @unchecked Sendable {
 
     func stop() {
         let resources = lock.withLock { () -> (CFMachPort?, CFRunLoopSource?, CFRunLoop?) in
-            let result = (eventTap, runLoopSource, eventRunLoop)
-            eventTap = nil
-            runLoopSource = nil
-            eventRunLoop = nil
             matcher = nil
             onUnlock = nil
-            return result
+            return (eventTap, runLoopSource, eventRunLoop)
         }
 
-        if let tap = resources.0 {
+        guard let tap = resources.0, let source = resources.1, let runLoop = resources.2 else {
+            return
+        }
+
+        let stopped = DispatchSemaphore(value: 0)
+        CFRunLoopPerformBlock(runLoop, CFRunLoopMode.commonModes.rawValue) { [weak self] in
             CGEvent.tapEnable(tap: tap, enable: false)
-        }
-        if let source = resources.1, let runLoop = resources.2 {
             CFRunLoopRemoveSource(runLoop, source, .commonModes)
+            self?.lock.withLock {
+                self?.eventTap = nil
+                self?.runLoopSource = nil
+                self?.eventRunLoop = nil
+            }
             CFRunLoopStop(runLoop)
+            stopped.signal()
         }
+        CFRunLoopWakeUp(runLoop)
+        stopped.wait()
     }
 
     private func installEventTap(ready: DispatchSemaphore) {
