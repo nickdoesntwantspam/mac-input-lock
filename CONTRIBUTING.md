@@ -34,7 +34,7 @@ This rule applies to every feature release, including small fixes. The paid prod
 
 ## Maintainer release setup
 
-The release workflow requires a Developer ID Application certificate and an App Store Connect API key with notarization access.
+The release workflow requires a Developer ID Application certificate and an App Store Connect API key with notarization access. These credentials are maintained by the project owner and are not required to build or test the app locally.
 
 Configure these GitHub Actions secrets:
 
