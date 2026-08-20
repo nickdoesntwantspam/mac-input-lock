@@ -20,7 +20,7 @@ Test input suppression on real hardware before submitting behavioral changes. A 
 
 ## Maintainer release setup
 
-The release workflow requires a Developer ID Application certificate for Apple team `G5E7K59HUM` and an App Store Connect API key with notarization access.
+The release workflow requires a Developer ID Application certificate and an App Store Connect API key with notarization access. These credentials are maintained by the project owner and are not required to build or test the app locally.
 
 Configure these GitHub Actions secrets:
 
@@ -31,7 +31,7 @@ Configure these GitHub Actions secrets:
 | `APPLE_API_KEY_P8` | Complete App Store Connect `.p8` private-key contents |
 | `APPLE_API_KEY_ID` | App Store Connect API key ID |
 | `APPLE_API_ISSUER_ID` | App Store Connect issuer ID |
-| `APPLE_TEAM_ID` | `G5E7K59HUM` |
+| `APPLE_TEAM_ID` | Apple Developer team identifier used for signing and notarization |
 
 To release:
 
