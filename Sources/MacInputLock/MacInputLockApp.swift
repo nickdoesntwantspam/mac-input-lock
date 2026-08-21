@@ -16,7 +16,13 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusBarController: StatusBarController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        statusBarController = StatusBarController()
+        let controller = StatusBarController()
+        statusBarController = controller
+        Task { @MainActor in
+            // The status button receives its window on the next AppKit layout pass.
+            try? await Task.sleep(for: .milliseconds(150))
+            controller.showLaunchHUD()
+        }
     }
 }
 
@@ -45,7 +51,13 @@ private final class StatusBarController: NSObject {
         observeState()
     }
 
+    func showLaunchHUD() {
+        guard let frame = statusItemScreenFrame else { return }
+        LaunchHUDController.shared.show(pointingAt: frame)
+    }
+
     @objc private func togglePopover() {
+        LaunchHUDController.shared.dismiss()
         guard let button = statusItem.button else { return }
         if popover.isShown {
             popover.performClose(nil)
@@ -53,6 +65,11 @@ private final class StatusBarController: NSObject {
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
             popover.contentViewController?.view.window?.makeKey()
         }
+    }
+
+    private var statusItemScreenFrame: NSRect? {
+        guard let button = statusItem.button, let window = button.window else { return nil }
+        return window.convertToScreen(button.convert(button.bounds, to: nil))
     }
 
     private func observeState() {

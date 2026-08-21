@@ -62,6 +62,10 @@ plutil -replace CFBundleShortVersionString -string "$version" "$app_dir/Contents
 plutil -replace CFBundleVersion -string "$build_number" "$app_dir/Contents/Info.plist"
 
 xattr -cr "$app_dir"
+# File Provider can immediately restore these Finder-only attributes in synced
+# folders. They are not part of the app and Developer ID signing rejects them.
+xattr -d com.apple.FinderInfo "$app_dir" 2>/dev/null || true
+xattr -d 'com.apple.fileprovider.fpfs#P' "$app_dir" 2>/dev/null || true
 if [ "$signing_identity" = "-" ]; then
     codesign --force --options runtime --sign - "$app_dir"
 else
