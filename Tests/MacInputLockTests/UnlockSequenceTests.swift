@@ -75,4 +75,32 @@ final class UnlockSequenceTests: XCTestCase {
 
         XCTAssertTrue(InstantLockShortcut.matches(keyCode: InstantLockShortcut.keyCode, flags: flags))
     }
+
+    func testStatusItemIsVisibleInsideNotchedScreenSafeArea() {
+        let screen = NSRect(x: 0, y: 0, width: 1512, height: 982)
+        let safeAreas = [
+            NSRect(x: 0, y: 950, width: 663, height: 32),
+            NSRect(x: 848, y: 950, width: 664, height: 32),
+        ]
+
+        XCTAssertTrue(StatusItemVisibility.isVisible(
+            frame: NSRect(x: 900, y: 954, width: 34, height: 24),
+            screenFrame: screen,
+            safeMenuBarAreas: safeAreas
+        ))
+    }
+
+    func testStatusItemIsHiddenWhenNotchClipsIt() {
+        let screen = NSRect(x: 0, y: 0, width: 1512, height: 982)
+        let safeAreas = [
+            NSRect(x: 0, y: 950, width: 663, height: 32),
+            NSRect(x: 848, y: 950, width: 664, height: 32),
+        ]
+
+        XCTAssertFalse(StatusItemVisibility.isVisible(
+            frame: NSRect(x: 830, y: 954, width: 34, height: 24),
+            screenFrame: screen,
+            safeMenuBarAreas: safeAreas
+        ))
+    }
 }
