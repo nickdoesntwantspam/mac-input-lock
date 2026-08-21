@@ -21,8 +21,13 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         Task { @MainActor in
             // The status button receives its window on the next AppKit layout pass.
             try? await Task.sleep(for: .milliseconds(150))
-            controller.showLaunchHUD()
+            controller.showLaunchGuidance()
         }
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        statusBarController?.showLaunchGuidance()
+        return true
     }
 }
 
@@ -31,6 +36,7 @@ private final class StatusBarController: NSObject {
     private let model = AppModel()
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let popover = NSPopover()
+    private var fallbackWindow: NSWindow?
 
     override init() {
         super.init()
@@ -51,9 +57,17 @@ private final class StatusBarController: NSObject {
         observeState()
     }
 
-    func showLaunchHUD() {
-        guard let frame = statusItemScreenFrame else { return }
-        LaunchHUDController.shared.show(pointingAt: frame)
+    func showLaunchGuidance() {
+        guard let frame = statusItemScreenFrame,
+              let screen = NSScreen.screens.first(where: { $0.frame.intersects(frame) }) ?? NSScreen.main else {
+            showFallbackWindow()
+            return
+        }
+        if StatusItemVisibility.isVisible(frame: frame, on: screen) {
+            LaunchHUDController.shared.show(pointingAt: frame)
+        } else {
+            showFallbackWindow()
+        }
     }
 
     @objc private func togglePopover() {
@@ -70,6 +84,33 @@ private final class StatusBarController: NSObject {
     private var statusItemScreenFrame: NSRect? {
         guard let button = statusItem.button, let window = button.window else { return nil }
         return window.convertToScreen(button.convert(button.bounds, to: nil))
+    }
+
+    private func showFallbackWindow() {
+        LaunchHUDController.shared.dismiss()
+        if let fallbackWindow {
+            NSApp.activate(ignoringOtherApps: true)
+            fallbackWindow.makeKeyAndOrderFront(nil)
+            return
+        }
+
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 380, height: 590),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "Mac Input Lock"
+        window.isReleasedWhenClosed = false
+        window.contentViewController = NSHostingController(
+            rootView: HiddenStatusItemView(model: model) { [weak window] in
+                window?.close()
+            }
+        )
+        window.center()
+        fallbackWindow = window
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
     }
 
     private func observeState() {
@@ -102,6 +143,28 @@ private final class StatusBarController: NSObject {
         }
         button.image = NSImage(systemSymbolName: symbol, accessibilityDescription: label)
         button.toolTip = label
+    }
+}
+
+private struct HiddenStatusItemView: View {
+    @Bindable var model: AppModel
+    let dismiss: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            VStack(alignment: .leading, spacing: 6) {
+                Label("The padlock is hidden", systemImage: "menubar.rectangle")
+                    .font(.headline)
+                Text("Your menu bar is too full for macOS to display it. You can use Mac Input Lock here. Remove or rearrange other menu-bar items to make the padlock visible.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding([.top, .horizontal], 16)
+
+            LockMenu(model: model, dismiss: dismiss)
+        }
+        .frame(width: 380)
     }
 }
 
