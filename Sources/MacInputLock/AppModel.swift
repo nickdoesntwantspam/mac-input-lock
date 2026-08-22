@@ -116,7 +116,6 @@ final class AppModel {
             try blocker.start(sequence: sequence) { [weak self] in
                 Task { @MainActor in self?.unlock() }
             }
-            hotKey.stop()
             state = .locked
         } catch {
             state = .error(error.localizedDescription)
@@ -125,7 +124,6 @@ final class AppModel {
 
     private func unlock() {
         blocker.stop()
-        hotKey.start()
         state = .restored
         UnlockHUDController.shared.show()
         transitionTask = Task { [weak self] in

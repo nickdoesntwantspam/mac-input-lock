@@ -9,7 +9,14 @@ swift test
 SIGNING_IDENTITY=- ./Scripts/build-app.sh
 ```
 
-Test input suppression on real hardware before submitting behavioral changes. A forced reboot is the last-resort recovery path during manual testing.
+Test input suppression on real hardware before submitting behavioral changes. Unit tests are not sufficient for changes involving the event tap, hotkey, lock state, or unlock behavior. Before merging or releasing any such change, test the signed app while a different application has focus and verify all of the following together:
+
+1. Ordinary keyboard input does not reach the focused application.
+2. Mouse and trackpad clicks, scrolling, and dragging do not reach the focused application.
+3. The configured unlock sequence restores keyboard and pointer input.
+4. The global hotkey locks and unlocks reliably.
+
+A forced reboot is the last-resort recovery path during manual testing.
 
 ## Pull requests
 

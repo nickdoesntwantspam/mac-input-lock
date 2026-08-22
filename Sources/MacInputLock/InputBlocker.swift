@@ -79,7 +79,7 @@ final class InputBlocker: @unchecked Sendable {
     private func installEventTap(ready: DispatchSemaphore) {
         let context = Unmanaged.passUnretained(self).toOpaque()
         guard let tap = CGEvent.tapCreate(
-            tap: .cgSessionEventTap,
+            tap: .cghidEventTap,
             place: .headInsertEventTap,
             options: .defaultTap,
             eventsOfInterest: CGEventMask.max,

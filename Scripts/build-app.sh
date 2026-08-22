@@ -4,6 +4,9 @@ set -eu
 project_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 configuration=${CONFIGURATION:-release}
 app_dir="$project_dir/dist/Mac Input Lock.app"
+assembly_dir=$(mktemp -d)
+build_app_dir="$assembly_dir/Mac Input Lock.app"
+trap 'rm -rf "$assembly_dir"' EXIT INT TERM
 universal=${UNIVERSAL:-0}
 
 version=${VERSION:-}
@@ -53,25 +56,22 @@ else
     binary_dir=$(swift build -c "$configuration" --show-bin-path)
 fi
 
-rm -rf "$app_dir"
-mkdir -p "$app_dir/Contents/MacOS" "$app_dir/Contents/Resources"
-cp "$binary_dir/MacInputLock" "$app_dir/Contents/MacOS/MacInputLock"
-cp "$project_dir/Resources/Info.plist" "$app_dir/Contents/Info.plist"
-cp "$project_dir/Resources/MacInputLock.icns" "$app_dir/Contents/Resources/MacInputLock.icns"
-plutil -replace CFBundleShortVersionString -string "$version" "$app_dir/Contents/Info.plist"
-plutil -replace CFBundleVersion -string "$build_number" "$app_dir/Contents/Info.plist"
+mkdir -p "$build_app_dir/Contents/MacOS" "$build_app_dir/Contents/Resources"
+cp "$binary_dir/MacInputLock" "$build_app_dir/Contents/MacOS/MacInputLock"
+cp "$project_dir/Resources/Info.plist" "$build_app_dir/Contents/Info.plist"
+cp "$project_dir/Resources/MacInputLock.icns" "$build_app_dir/Contents/Resources/MacInputLock.icns"
+plutil -replace CFBundleShortVersionString -string "$version" "$build_app_dir/Contents/Info.plist"
+plutil -replace CFBundleVersion -string "$build_number" "$build_app_dir/Contents/Info.plist"
 
-xattr -cr "$app_dir"
-# File Provider can immediately restore these Finder-only attributes in synced
-# folders. They are not part of the app and Developer ID signing rejects them.
-xattr -d com.apple.FinderInfo "$app_dir" 2>/dev/null || true
-xattr -d 'com.apple.fileprovider.fpfs#P' "$app_dir" 2>/dev/null || true
+xattr -cr "$build_app_dir"
 if [ "$signing_identity" = "-" ]; then
-    codesign --force --options runtime --sign - "$app_dir"
+    codesign --force --options runtime --sign - "$build_app_dir"
 else
-    codesign --force --options runtime --timestamp --sign "$signing_identity" "$app_dir"
+    codesign --force --options runtime --timestamp --sign "$signing_identity" "$build_app_dir"
 fi
-xattr -cr "$app_dir"
 
-codesign --verify --deep --strict "$app_dir"
+codesign --verify --deep --strict "$build_app_dir"
+rm -rf "$app_dir"
+mkdir -p "$(dirname "$app_dir")"
+ditto --norsrc --noextattr "$build_app_dir" "$app_dir"
 echo "$app_dir"
