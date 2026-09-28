@@ -9,6 +9,29 @@ build_app_dir="$assembly_dir/Mac Input Lock.app"
 trap 'rm -rf "$assembly_dir"' EXIT INT TERM
 universal=${UNIVERSAL:-0}
 
+strip_disallowed_xattrs() {
+    xattr -cr "$1"
+    find "$1" -exec xattr -d com.apple.FinderInfo {} \; 2>/dev/null || true
+    find "$1" -exec xattr -d com.apple.ResourceFork {} \; 2>/dev/null || true
+}
+
+verify_bundle() {
+    if codesign --verify --deep --strict "$1"; then
+        return
+    fi
+
+    # iCloud Drive can immediately reattach empty Finder metadata to bundles
+    # stored under Documents. Accept that local-only mutation if the signature
+    # itself still verifies; CI and release validation always require strict.
+    if xattr -p 'com.apple.fileprovider.fpfs#P' "$1" >/dev/null 2>&1; then
+        codesign --verify --deep "$1"
+        echo "Warning: strict verification was relaxed for an iCloud-managed local build." >&2
+        return
+    fi
+
+    return 1
+}
+
 version=${VERSION:-}
 if [ -z "$version" ]; then
     version=$(git -C "$project_dir" describe --tags --match 'v[0-9]*' --exact-match 2>/dev/null | sed 's/^v//' || true)
@@ -56,17 +79,28 @@ else
     binary_dir=$(swift build -c "$configuration" --show-bin-path)
 fi
 
-mkdir -p "$build_app_dir/Contents/MacOS" "$build_app_dir/Contents/Resources"
+mkdir -p "$build_app_dir/Contents/MacOS" "$build_app_dir/Contents/Resources" "$build_app_dir/Contents/Frameworks"
 cp "$binary_dir/MacInputLock" "$build_app_dir/Contents/MacOS/MacInputLock"
+ditto "$binary_dir/Sparkle.framework" "$build_app_dir/Contents/Frameworks/Sparkle.framework"
 cp "$project_dir/Resources/Info.plist" "$build_app_dir/Contents/Info.plist"
 cp "$project_dir/Resources/MacInputLock.icns" "$build_app_dir/Contents/Resources/MacInputLock.icns"
+cp "$project_dir/.build/checkouts/Sparkle/LICENSE" "$build_app_dir/Contents/Resources/Sparkle-LICENSE.txt"
+chmod 644 "$build_app_dir/Contents/Resources/Sparkle-LICENSE.txt"
 plutil -replace CFBundleShortVersionString -string "$version" "$build_app_dir/Contents/Info.plist"
 plutil -replace CFBundleVersion -string "$build_number" "$build_app_dir/Contents/Info.plist"
 
-xattr -cr "$build_app_dir"
+strip_disallowed_xattrs "$build_app_dir"
 if [ "$signing_identity" = "-" ]; then
-    codesign --force --options runtime --sign - "$build_app_dir"
+    codesign --force --deep --options runtime \
+        --preserve-metadata=identifier,entitlements,flags \
+        --sign - "$build_app_dir/Contents/Frameworks/Sparkle.framework"
+    codesign --force --options runtime \
+        --entitlements "$project_dir/Resources/Debug.entitlements" \
+        --sign - "$build_app_dir"
 else
+    codesign --force --deep --options runtime --timestamp \
+        --preserve-metadata=identifier,entitlements,flags \
+        --sign "$signing_identity" "$build_app_dir/Contents/Frameworks/Sparkle.framework"
     codesign --force --options runtime --timestamp --sign "$signing_identity" "$build_app_dir"
 fi
 
@@ -74,4 +108,6 @@ codesign --verify --deep --strict "$build_app_dir"
 rm -rf "$app_dir"
 mkdir -p "$(dirname "$app_dir")"
 ditto --norsrc --noextattr "$build_app_dir" "$app_dir"
+strip_disallowed_xattrs "$app_dir"
+verify_bundle "$app_dir"
 echo "$app_dir"

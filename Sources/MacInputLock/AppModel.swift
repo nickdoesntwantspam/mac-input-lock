@@ -125,7 +125,6 @@ final class AppModel {
     private func unlock() {
         blocker.stop()
         state = .restored
-        UnlockHUDController.shared.show()
         transitionTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(3))
             guard !Task.isCancelled else { return }

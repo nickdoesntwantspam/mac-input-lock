@@ -2,13 +2,13 @@ import AppKit
 import SwiftUI
 
 @MainActor
-final class UnlockHUDController {
-    static let shared = UnlockHUDController()
+final class InputFeedbackHUDController {
+    static let shared = InputFeedbackHUDController()
 
     private var panel: NSPanel?
     private var dismissalTask: Task<Void, Never>?
 
-    func show() {
+    func show(_ feedback: InputFeedback) {
         dismissalTask?.cancel()
         panel?.close()
 
@@ -26,7 +26,7 @@ final class UnlockHUDController {
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.ignoresMouseEvents = true
         panel.hidesOnDeactivate = false
-        panel.contentView = NSHostingView(rootView: UnlockHUDView())
+        panel.contentView = NSHostingView(rootView: InputFeedbackHUDView(feedback: feedback))
 
         if let screen = NSScreen.main {
             let frame = screen.visibleFrame
@@ -62,32 +62,40 @@ final class UnlockHUDController {
     }
 }
 
-private struct UnlockHUDView: View {
-    @State private var isUnlocked = false
+private struct InputFeedbackHUDView: View {
+    let feedback: InputFeedback
+    @State private var didTransition = false
+
+    private var tint: Color {
+        switch feedback.tint {
+        case .red: .red
+        case .green: .green
+        }
+    }
 
     var body: some View {
         VStack(spacing: 14) {
             ZStack {
                 Circle()
-                    .fill(.green.opacity(0.16))
+                    .fill(tint.opacity(0.16))
                     .frame(width: 104, height: 104)
 
-                Image(systemName: "lock.fill")
-                    .opacity(isUnlocked ? 0 : 1)
-                    .scaleEffect(isUnlocked ? 0.72 : 1)
+                Image(systemName: feedback.initialSymbol)
+                    .opacity(didTransition ? 0 : 1)
+                    .scaleEffect(didTransition ? 0.72 : 1)
 
-                Image(systemName: "lock.open.fill")
-                    .opacity(isUnlocked ? 1 : 0)
-                    .scaleEffect(isUnlocked ? 1 : 0.72)
-                    .rotationEffect(.degrees(isUnlocked ? 0 : -10))
+                Image(systemName: feedback.finalSymbol)
+                    .opacity(didTransition ? 1 : 0)
+                    .scaleEffect(didTransition ? 1 : 0.72)
+                    .rotationEffect(.degrees(didTransition ? 0 : -10))
             }
             .font(.system(size: 54, weight: .semibold))
-            .foregroundStyle(.green)
+            .foregroundStyle(tint)
 
-            Text("Input restored")
+            Text(feedback.title)
                 .font(.headline)
-                .opacity(isUnlocked ? 1 : 0)
-                .offset(y: isUnlocked ? 0 : 5)
+                .opacity(didTransition ? 1 : 0)
+                .offset(y: didTransition ? 0 : 5)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
@@ -99,7 +107,7 @@ private struct UnlockHUDView: View {
         .task {
             try? await Task.sleep(for: .milliseconds(180))
             withAnimation(.spring(response: 0.48, dampingFraction: 0.68)) {
-                isUnlocked = true
+                didTransition = true
             }
         }
     }

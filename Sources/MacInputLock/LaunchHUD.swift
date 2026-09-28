@@ -103,7 +103,7 @@ private struct LaunchHUDView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Mac Input Lock is running")
                         .font(.headline)
-                    Text("Click the open lock directly above to choose an unlock sequence and start.")
+                    Text("Click the open lock directly above to choose an unlock sequence and start. If it disappears, open Mac Input Lock again from Applications or Spotlight.")
                         .font(.callout)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)

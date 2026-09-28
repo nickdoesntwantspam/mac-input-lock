@@ -28,5 +28,17 @@
     <true/>
     <key>NSHumanReadableCopyright</key>
     <string>Copyright © 2026 Mac Input Lock contributors. MIT License.</string>
+    <key>SUFeedURL</key>
+    <string>https://github.com/nickdoesntwantspam/mac-input-lock/releases/latest/download/appcast.xml</string>
+    <key>SUPublicEDKey</key>
+    <string>4Iqzys+acVg1Oj7eL9Bc7HSefBY2mBnVsjfdd7ZjKuc=</string>
+    <key>SUEnableSystemProfiling</key>
+    <false/>
+    <key>SUEnableAutomaticChecks</key>
+    <false/>
+    <key>SUVerifyUpdateBeforeExtraction</key>
+    <true/>
+    <key>SURequireSignedFeed</key>
+    <true/>
 </dict>
 </plist>
