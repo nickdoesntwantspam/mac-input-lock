@@ -43,6 +43,7 @@ jobs:
           SIGNING_IDENTITY: "Developer ID Application: Nicholas Williams (${{ secrets.APPLE_TEAM_ID }})"
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
         run: ./Scripts/release.sh
 
       - name: Retain official build for website fulfillment
@@ -59,9 +60,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Public GitHub releases must remain source-only. The signed DMG is
-          # distributed exclusively through the Stripe-gated website flow.
           gh release create "$GITHUB_REF_NAME" \
+            "dist/Mac-Input-Lock-${GITHUB_REF_NAME#v}.zip" \
+            "dist/Mac-Input-Lock-${GITHUB_REF_NAME#v}.zip.sha256" \
+            "dist/appcast.xml" \
             --verify-tag \
             --generate-notes \
             --title "Mac Input Lock ${GITHUB_REF_NAME#v}"

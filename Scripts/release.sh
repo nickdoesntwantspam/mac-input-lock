@@ -20,9 +20,15 @@ swift test
 VERSION="$version" UNIVERSAL=1 REQUIRE_DEVELOPER_ID=1 ./Scripts/build-app.sh
 VERSION="$version" ./Scripts/create-dmg.sh
 ./Scripts/notarize.sh "$project_dir/dist/Mac-Input-Lock-$version.dmg"
+xcrun stapler staple "$project_dir/dist/Mac Input Lock.app"
+xcrun stapler validate "$project_dir/dist/Mac Input Lock.app"
+spctl --assess --type execute --verbose=2 "$project_dir/dist/Mac Input Lock.app"
+VERSION="$version" ./Scripts/create-update.sh
 shasum -a 256 "$project_dir/dist/Mac-Input-Lock-$version.dmg" \
     | sed "s|$project_dir/dist/||" \
     > "$project_dir/dist/Mac-Input-Lock-$version.dmg.sha256"
 
 file "$project_dir/dist/Mac Input Lock.app/Contents/MacOS/MacInputLock" | grep -q 'universal binary'
 codesign --verify --deep --strict --verbose=2 "$project_dir/dist/Mac Input Lock.app"
+grep -q 'sparkle:edSignature=' "$project_dir/dist/appcast.xml"
+grep -q 'sparkle-signatures:' "$project_dir/dist/appcast.xml"
