@@ -30,8 +30,10 @@ trap cleanup EXIT INT TERM
 test -d "$app_dir" || { echo "Build the app before creating the DMG." >&2; exit 1; }
 ditto "$app_dir" "$stage_dir/Mac Input Lock.app"
 ln -s /Applications "$stage_dir/Applications"
-mkdir -p "$stage_dir/.background"
-swift "$project_dir/Scripts/create-dmg-background.swift" "$stage_dir/.background/background.png"
+test -f "$stage_dir/Mac Input Lock.app/Contents/Resources/InstallerBackground.png" || {
+    echo "App bundle is missing InstallerBackground.png; rebuild the app." >&2
+    exit 1
+}
 xattr -cr "$stage_dir"
 rm -f "$dmg_path" "$dmg_path.sha256"
 hdiutil create -quiet -volname "$volume_name" -srcfolder "$stage_dir" -ov -format UDRW "$rw_dmg"
@@ -55,7 +57,7 @@ tell application "Finder"
         set arrangement of theViewOptions to not arranged
         set icon size of theViewOptions to 112
         set text size of theViewOptions to 14
-        set backgroundFile to POSIX file "$mount_dir/.background/background.png" as alias
+        set backgroundFile to POSIX file "$mount_dir/Mac Input Lock.app/Contents/Resources/InstallerBackground.png" as alias
         set background picture of theViewOptions to backgroundFile
         set position of item "Mac Input Lock.app" of container window to {175, 225}
         set position of item "Applications" of container window to {485, 225}
@@ -74,9 +76,11 @@ for attempt in 1 2 3 4 5; do
     sleep 1
 done
 test -s "$mount_dir/.DS_Store" || { echo "Finder did not save the styled DMG layout." >&2; exit 1; }
+rm -rf "$mount_dir/.fseventsd" "$mount_dir/.Spotlight-V100" "$mount_dir/.Trashes"
 hdiutil detach "$device" -quiet
 device=
 hdiutil convert -quiet "$rw_dmg" -format UDZO -o "$dmg_path"
+"$project_dir/Scripts/validate-dmg-layout.sh" "$dmg_path"
 
 if [ -n "${SIGNING_IDENTITY:-}" ] && [ "$SIGNING_IDENTITY" != "-" ]; then
     codesign --force --timestamp --sign "$SIGNING_IDENTITY" "$dmg_path"

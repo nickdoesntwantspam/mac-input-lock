@@ -85,6 +85,8 @@ ditto "$binary_dir/Sparkle.framework" "$build_app_dir/Contents/Frameworks/Sparkl
 cp "$project_dir/Resources/Info.plist" "$build_app_dir/Contents/Info.plist"
 cp "$project_dir/Resources/MacInputLock.icns" "$build_app_dir/Contents/Resources/MacInputLock.icns"
 cp "$project_dir/.build/checkouts/Sparkle/LICENSE" "$build_app_dir/Contents/Resources/Sparkle-LICENSE.txt"
+swift "$project_dir/Scripts/create-dmg-background.swift" \
+    "$build_app_dir/Contents/Resources/InstallerBackground.png"
 chmod 644 "$build_app_dir/Contents/Resources/Sparkle-LICENSE.txt"
 plutil -replace CFBundleShortVersionString -string "$version" "$build_app_dir/Contents/Info.plist"
 plutil -replace CFBundleVersion -string "$build_number" "$build_app_dir/Contents/Info.plist"
