@@ -53,6 +53,8 @@ enum ControlWindowReason: Equatable {
             "menubar.rectangle"
         }
     }
+
+    var dismissButtonTitle: String { "Close" }
 }
 
 enum AppPresentationAction: Equatable {
@@ -71,8 +73,14 @@ enum AppPresentationPolicy {
         .showControlWindow(.reopened)
     }
 
-    static func visibilityChangeAction(wasVisible: Bool?, isVisible: Bool) -> AppPresentationAction? {
-        guard wasVisible == true, !isVisible else { return nil }
+    static func visibilityChangeAction(
+        wasVisible: Bool?,
+        isVisible: Bool,
+        automaticRecoveryAlreadyPresented: Bool
+    ) -> AppPresentationAction? {
+        guard !automaticRecoveryAlreadyPresented,
+              wasVisible == true,
+              !isVisible else { return nil }
         return .showControlWindow(.hiddenStatusItem)
     }
 }

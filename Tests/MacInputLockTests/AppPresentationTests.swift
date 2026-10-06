@@ -26,21 +26,41 @@ final class AppPresentationTests: XCTestCase {
 
     func testVisibleItemBecomingHiddenShowsRecoveryWindow() {
         XCTAssertEqual(
-            AppPresentationPolicy.visibilityChangeAction(wasVisible: true, isVisible: false),
+            AppPresentationPolicy.visibilityChangeAction(
+                wasVisible: true,
+                isVisible: false,
+                automaticRecoveryAlreadyPresented: false
+            ),
             .showControlWindow(.hiddenStatusItem)
         )
     }
 
-    func testRepeatedHiddenChecksDoNotRepeatedlyShowRecoveryWindow() {
+    func testAutomaticRecoveryWindowIsOnlyShownOncePerLaunch() {
         XCTAssertNil(
-            AppPresentationPolicy.visibilityChangeAction(wasVisible: false, isVisible: false)
+            AppPresentationPolicy.visibilityChangeAction(
+                wasVisible: true,
+                isVisible: false,
+                automaticRecoveryAlreadyPresented: true
+            )
         )
     }
 
     func testVisibleOrNewlyVisibleItemsDoNotShowRecoveryWindow() {
-        XCTAssertNil(AppPresentationPolicy.visibilityChangeAction(wasVisible: nil, isVisible: true))
-        XCTAssertNil(AppPresentationPolicy.visibilityChangeAction(wasVisible: false, isVisible: true))
-        XCTAssertNil(AppPresentationPolicy.visibilityChangeAction(wasVisible: true, isVisible: true))
+        XCTAssertNil(AppPresentationPolicy.visibilityChangeAction(
+            wasVisible: nil,
+            isVisible: true,
+            automaticRecoveryAlreadyPresented: false
+        ))
+        XCTAssertNil(AppPresentationPolicy.visibilityChangeAction(
+            wasVisible: false,
+            isVisible: true,
+            automaticRecoveryAlreadyPresented: false
+        ))
+        XCTAssertNil(AppPresentationPolicy.visibilityChangeAction(
+            wasVisible: true,
+            isVisible: true,
+            automaticRecoveryAlreadyPresented: false
+        ))
     }
 
     func testControlWindowReasonsHaveDistinctUserFacingCopy() {
@@ -51,6 +71,8 @@ final class AppPresentationTests: XCTestCase {
         )
         XCTAssertEqual(ControlWindowReason.hiddenStatusItem.title, "The padlock is hidden")
         XCTAssertTrue(ControlWindowReason.hiddenStatusItem.message.contains("menu bar"))
+        XCTAssertEqual(ControlWindowReason.hiddenStatusItem.dismissButtonTitle, "Close")
+        XCTAssertEqual(ControlWindowReason.reopened.dismissButtonTitle, "Close")
     }
 
     func testDockPreferenceDefaultsToMenuBarOnlyAndAppliesIt() {

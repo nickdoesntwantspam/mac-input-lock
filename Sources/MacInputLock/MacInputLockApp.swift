@@ -41,6 +41,7 @@ private final class StatusBarController: NSObject {
     private var controlWindow: NSWindow?
     private var updateConsentWindow: NSWindow?
     private var lastKnownStatusItemVisibility: Bool?
+    private var automaticRecoveryAlreadyPresented = false
     private var lastObservedState: AppModel.State?
     private var visibilityCheckTask: Task<Void, Never>?
     private var updateConsentTask: Task<Void, Never>?
@@ -131,6 +132,9 @@ private final class StatusBarController: NSObject {
             }
             LaunchHUDController.shared.show(pointingAt: statusItemFrame)
         case let .showControlWindow(reason):
+            if reason == .hiddenStatusItem {
+                automaticRecoveryAlreadyPresented = true
+            }
             showControlWindow(reason: reason)
         }
     }
@@ -278,7 +282,8 @@ private final class StatusBarController: NSObject {
             let isVisible = statusItemIsSafelyVisible(frame: frame)
             let action = AppPresentationPolicy.visibilityChangeAction(
                 wasVisible: lastKnownStatusItemVisibility,
-                isVisible: isVisible
+                isVisible: isVisible,
+                automaticRecoveryAlreadyPresented: automaticRecoveryAlreadyPresented
             )
             lastKnownStatusItemVisibility = isVisible
             if let action {
@@ -406,6 +411,17 @@ private struct ControlWindowView: View {
             .padding([.top, .horizontal], 16)
 
             LockMenu(model: model, preferences: preferences, updater: updater, dismiss: dismiss)
+
+            Divider()
+
+            HStack {
+                Spacer()
+                Button(reason.dismissButtonTitle, action: dismiss)
+                    .buttonStyle(.bordered)
+                    .keyboardShortcut(.cancelAction)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
         }
         .frame(width: 432)
     }
