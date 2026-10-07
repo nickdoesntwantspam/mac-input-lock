@@ -24,6 +24,9 @@ xcrun stapler staple "$project_dir/dist/Mac Input Lock.app"
 xcrun stapler validate "$project_dir/dist/Mac Input Lock.app"
 spctl --assess --type execute --verbose=2 "$project_dir/dist/Mac Input Lock.app"
 VERSION="$version" ./Scripts/create-update.sh
+./Scripts/verify-update-metadata.sh \
+    "$project_dir/dist/Mac Input Lock.app" \
+    "$project_dir/dist/appcast.xml"
 shasum -a 256 "$project_dir/dist/Mac-Input-Lock-$version.dmg" \
     | sed "s|$project_dir/dist/||" \
     > "$project_dir/dist/Mac-Input-Lock-$version.dmg.sha256"

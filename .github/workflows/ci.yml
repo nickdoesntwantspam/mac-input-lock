@@ -14,7 +14,9 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Test
-        run: swift test
+        run: |
+          swift test
+          ./Tests/Scripts/verify-update-metadata-tests.sh
       - name: Build app
         env:
           SIGNING_IDENTITY: "-"
